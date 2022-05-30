@@ -1,4 +1,4 @@
-﻿
+
 Dictionary<string, (string name, int quantity, int size)> shipDistribution = new()
 {
     { "PS", ("Porta-Aviões", 1, 5) },
@@ -24,9 +24,9 @@ void beginGame()
     showGamePresentation();
     gameModeSelection();
 }
+
 void showGamePresentation()
 {
-    Console.ForegroundColor = ConsoleColor.White;
     Console.WriteLine("-------------------------------------------------");
     Console.WriteLine("-----             Batalha Naval             -----");
     Console.WriteLine("-------------------------------------------------");
@@ -40,7 +40,6 @@ void showGamePresentation()
     Console.WriteLine("1 - Um Jogador");
     Console.WriteLine("2 - Dois Jogadores");
     Console.WriteLine();
-
 }
 
 void gameModeSelection()
@@ -62,7 +61,6 @@ void gameModeSelection()
             gameModeSelection();
             return;
     }
-
 }
 
 int inputGameMode()
@@ -89,7 +87,7 @@ void gameModeTwo()
 
     Console.WriteLine("Vamos Jogar?");
     Console.WriteLine("Digite qualquer valor para iniciar o jogo");
-    Console.ReadLine();
+    Console.ReadKey();
     Console.Clear();
     
     gameboardFiller(playerOne);
@@ -102,98 +100,131 @@ void gameModeTwo()
 
     while (!isWinner)
     {
-        (actual, next) = (next, actual);
         playerChanger(actual, next);
-        headerGameboard(actual);
-        jogada(actual, next);
+        (actual, next) = (next, actual);        
+        headerGameboard(actual, next);
+        turn(actual, next);
         isWinner = actual.IsWinner();        
     }
 
+    winScreen(actual);
     PlayAgain();
 }
 
-void headerGameboard(Player player)
+void winScreen(Player player)
+{
+    Console.Clear();
+    Console.WriteLine("*********************************************************");
+    Console.WriteLine($"Parabéns {player.GetName()}, você venceu!!!!");
+    Console.WriteLine($"Foram {player.TurnsPlayed()} turnos jogados!");
+    Console.WriteLine("**********************************************************");
+    Console.WriteLine();
+    Console.WriteLine();
+    Console.WriteLine("Let's Code - Projeto Módulo 01");
+    Console.WriteLine("Professor Heber Henrique da Silva");
+    Console.WriteLine("Created by Luiza Motta Campello");    
+    Console.WriteLine();
+    Console.WriteLine();
+}
+
+void headerGameboard(Player player, Player enemy)
 {
     var defenseGameboard = player.GetDefenseGameboard();
     var attackGameboard = player.GetAttackGameboard();
-    Console.WriteLine("Meu tabuleiro                                     Tabuleiro de ataque");
+    var currentColor = Console.BackgroundColor;
+    Console.WriteLine("------------------------------------------------------------------");
+    Console.WriteLine($"Placar: {player.GetName()} {player.PerfectHits()}/30 VS {enemy.GetName()} {enemy.PerfectHits()}/30");
+    Console.WriteLine();
+    Console.WriteLine("          Meu tabuleiro                        Tabuleiro de ataque");
     for (int i = 0; i < 11; i++)
     {
         for (int j = 0; j < 11; j++)
         {
-            Console.Write($"{defenseGameboard[i, j],-2} ");
+            Console.Write($"{defenseGameboard[i, j],-2}|");
         }
         Console.Write("      ");
         for (int j = 0; j < 11; j++)
         {
-            Console.Write($"{attackGameboard[i, j],-2} ");
+            if (attackGameboard[i, j] == "")
+            {
+                Console.BackgroundColor = ConsoleColor.White;
+            }
+            Console.Write($"{attackGameboard[i, j],-2}|");
+            Console.BackgroundColor = currentColor;
         }
+        Console.BackgroundColor = currentColor;
         Console.Write(Environment.NewLine);
     }
-    Console.WriteLine($"{player.PerfectHits()}/30");
+    Console.WriteLine();
+    
 }
 
-void jogada(Player actual, Player next)
+void turn(Player actual, Player next)
 {
+    actual.NewTurn();
     string[,] attackGameboard = actual.GetAttackGameboard();
     string[,] enemyGameboard = next.GetDefenseGameboard();
     var target = acquiredTarget(attackGameboard);
-    shotTarget(target.line, target.column, enemyGameboard, attackGameboard, actual);
+    shotTarget(target.line, target.column, enemyGameboard, attackGameboard, actual, next);
 
 }
 
 (int line, int column) acquiredTarget(string[,] gameboard)
 {
-    Console.WriteLine("Vamos derrubar alguns navios. Onde deseja atirar? Exemplo(B10)");
-    string input = Console.ReadLine();
+    bool validTarget = false;
+    int lineIndex = -1;
+    int columnIndex = -1;
 
-    if (string.IsNullOrWhiteSpace(input))
+    while (!validTarget)
     {
-        Console.WriteLine("Alvo inválido.Tente Novamente");
-        acquiredTarget(gameboard);
-    }
+        Console.WriteLine("Vamos derrubar alguns navios. Onde deseja atirar? Exemplo(B10)");
+        string input = Console.ReadLine().ToUpper();
 
-    int stringSize = input.Length;
-    if (stringSize < 2 || stringSize > 3)
-    {
-        Console.WriteLine("Alvo inválido.Tente Novamente");
-        acquiredTarget(gameboard);
-    }
-    
-    if (input[0] >= 'A' && input[0] <= 'J')
-    {        
-        int columnIndex;
-        if(int.TryParse(input.Substring(1), out columnIndex))
+        if (string.IsNullOrWhiteSpace(input))
         {
-            if (columnIndex >= 1 || columnIndex <= 10)
-            {
-                int lineIndex = (input[0]) - 64;
-                if (gameboard[lineIndex,columnIndex] == "")
-                {
-                    return (lineIndex, columnIndex);
-                }
-                else
-                {
-                    Console.WriteLine("Você já atacou esse alvo.Tente outra posição");
-                    acquiredTarget(gameboard);
-                }
-            }            
+            Console.WriteLine("Alvo inválido.Tente Novamente");
+            continue;
         }
-    }    
-    Console.WriteLine("Alvo inválido.Tente Novamente");
-    acquiredTarget(gameboard);
-    return (0, 0);
+
+        int stringSize = input.Length;
+        if (stringSize < 2 || stringSize > 3)
+        {
+            Console.WriteLine("Alvo inválido.Tente Novamente");
+            continue;
+        }
+
+        if (input[0] >= 'A' && input[0] <= 'J')
+        {
+            if (int.TryParse(input.Substring(1), out columnIndex))
+            {
+                if (columnIndex >= 1 && columnIndex <= 10)
+                {
+                   lineIndex = (input[0]) - 64;
+                    if (gameboard[lineIndex, columnIndex] == "")
+                    {
+                        validTarget = true;
+                        break;
+                    }                    
+                }
+            }
+        }
+        Console.WriteLine("Alvo inválido.Tente Novamente");
+    }
+
+    return (lineIndex, columnIndex);
 }
 
-void shotTarget(int targetLine, int targetColumn, string[,] enemyGameboard, string[,] attackGameboard, Player player) 
+void shotTarget(int targetLine, int targetColumn, string[,] enemyGameboard, string[,] attackGameboard, Player player, Player enemy) 
 {
     Random rnd = new Random();
     int random = rnd.Next(1, 3);
     if (enemyGameboard[targetLine, targetColumn] == "")
     {
         attackGameboard[targetLine, targetColumn] = "A";
-        enemyGameboard[targetLine, targetColumn] = "~";
+        enemyGameboard[targetLine, targetColumn] = "A";
         string message = $"Miss{random}";
+        Console.Clear();
+        headerGameboard(player, enemy);
         Console.WriteLine(shotMessages[message]);
     }
     else
@@ -202,6 +233,8 @@ void shotTarget(int targetLine, int targetColumn, string[,] enemyGameboard, stri
         enemyGameboard[targetLine, targetColumn] = "X";
         player.Hits();
         string message = $"Hit{random}";
+        Console.Clear();
+        headerGameboard(player, enemy);
         Console.WriteLine(shotMessages[message]);
         
     }
@@ -233,7 +266,12 @@ string inputPlayerName(int player)
 
     if (String.IsNullOrWhiteSpace(playerName))
     {
-        Console.WriteLine("...");
+        for (int i = 0; i < 3; i++)
+        {
+            Console.Write(".");
+            Thread.Sleep(500);
+        }
+        Console.WriteLine();
         Console.WriteLine($"Vou te chamar de Player {player}!");
         Console.WriteLine();
         return $"Player {player}";
@@ -254,6 +292,7 @@ void gameboardFiller(Player player)
         Console.WriteLine($"- NT - Navio-Tanque (4 quadrantes) - {player.ShipsPlaced("NT")}/{shipDistribution["NT"].quantity}");
         Console.WriteLine($"- DS - Destroyers (3 quadrantes)  - {player.ShipsPlaced("DS")}/{shipDistribution["DS"].quantity}");
         Console.WriteLine($"- SB - Submarinos (2 quadrantes)  - {player.ShipsPlaced("SB")}/{shipDistribution["SB"].quantity}");
+        Console.WriteLine();
 
         gameboardPrinter(player);
         inputCoordinates(player);
@@ -499,8 +538,20 @@ string validateShip(Player player)
 void playerChanger(Player player, Player next)
 {
     Console.WriteLine($"Digite qualquer tecla para encerrar a jogada de {player.GetName()}");
-    Console.ReadLine();
+    Console.ReadKey();
     Console.Clear();
+
+    if (next.GetName() == "PC da Luiza")
+    {
+        Console.BackgroundColor = ConsoleColor.DarkGray;
+        Console.Write("Processando jogada");
+        for (int i = 0; i < 3; i++)
+        {
+            Console.Write(".");
+            Thread.Sleep(500);
+        }
+    }
+
     if (next.GetPlayer() == 2)
     {
         Console.BackgroundColor = ConsoleColor.DarkBlue;
@@ -509,13 +560,10 @@ void playerChanger(Player player, Player next)
     {
         Console.ResetColor();
     }
-
     Console.WriteLine($"Insira qualquer valor para iniciar a jogada de {next.GetName()}");
-    Console.ReadLine();
+    Console.ReadKey();
     Console.Clear();
 }
-
-
 
 public class Player
 {
@@ -526,6 +574,7 @@ public class Player
     string[,] attackGameboard;
     string[,] defenseGameboard;
     Dictionary<string, int> shipPlacement;
+    int turns;
 
 
     public Player(String name, int player)
@@ -622,8 +671,17 @@ public class Player
     {
         return perfectHits;
     }
-}
 
+    public int TurnsPlayed()
+    {
+        return turns;
+    }
+
+    public void NewTurn()
+    {
+        turns++;
+    }
+}
 
 enum CharType
 {
