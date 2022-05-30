@@ -8,10 +8,13 @@ Dictionary<string, (string name, int quantity, int size)> shipDistribution = new
 };
 
 
-showGamePresentation();
-gameModeSelection();
+beginGame();
 
-
+void beginGame()
+{
+    showGamePresentation();
+    gameModeSelection();
+}
 void showGamePresentation()
 {
     Console.ForegroundColor = ConsoleColor.White;
@@ -38,11 +41,11 @@ void gameModeSelection()
     {
         case 1:
             Console.WriteLine();
-            gamePlayer(gameMode);
+            gameModeOne();
             return;
         case 2:
             Console.WriteLine();
-            gamePlayer(gameMode);
+            gameModeTwo();
             return;
         default:
             Console.WriteLine();
@@ -61,26 +64,6 @@ int inputGameMode()
     return intMode;
 }
 
-void gamePlayer(int gameMode)
-{
-    switch (gameMode)
-    {
-        case 1:
-            gameModeOne();
-            return;
-        case 2:
-            Console.WriteLine("Vamos Jogar?");
-            Console.WriteLine("Digite qualquer valor para iniciar o jogo");
-            Console.ReadLine();
-            Console.Clear();
-            gameModeTwo();
-            return;
-        default:
-            return;
-    }
-
-}
-
 void gameModeOne()
 {
     Console.WriteLine("Disponivel somente na versão Pro");
@@ -94,10 +77,46 @@ void gameModeTwo()
 {
     Player playerOne = new Player(inputPlayerName(1), 1);
     Player playerTwo = new Player(inputPlayerName(2), 2);
-    gameboardFiller(playerOne);
+
+    Console.WriteLine("Vamos Jogar?");
+    Console.WriteLine("Digite qualquer valor para iniciar o jogo");
+    Console.ReadLine();
     Console.Clear();
+
+    playerChanger(playerOne);
+    gameboardFiller(playerOne);
+
+    playerChanger(playerTwo);
     gameboardFiller(playerTwo);
 
+    Player winner = joguinho(playerOne, playerTwo);
+    PlayAgain();
+}
+
+Player joguinho(Player one, Player two)
+{
+    // tá acabando
+    // vai dar certo s2
+    return one;
+}
+
+void PlayAgain()
+{
+    Console.Write("Gostaria de jogar novamente? S/N");
+    string input = Console.ReadLine();
+    switch (input)
+    {
+        case "S":
+            beginGame();
+            return;
+        case "N":
+            Console.WriteLine("É isso então. Muito obrigada por jogar e até mais!");
+            return;
+        default:
+            Console.WriteLine("Não entendi...");
+            PlayAgain();
+            return;
+    }
 }
 
 string inputPlayerName(int player)
@@ -116,31 +135,78 @@ string inputPlayerName(int player)
     return playerName;
 }
 
-void inputCoordinates(Player player)
-{
-    Console.WriteLine("Qual o tipo de embarcação?");
-    string ship = validateShip(player);
-
-    var placement = validateCoordinatesandShip(ship, player);
-    Console.WriteLine($"Esse é o barco {ship} pra essa posição{placement} para {player.GetName()}");
-}
-
 void gameboardFiller(Player player)
 {
     Console.WriteLine($"{player.GetName()}, hora de posicionar os navios!");
     Console.WriteLine();
-    Console.WriteLine(@"Os navios são identificados por siglas:
-    - PS - Porta-Aviões (5 quadrantes)
-    - NT - Navio-Tanque (4 quadrantes)
-    - DS - Destroyers (3 quadrantes)
-    - SB - Submarinos (2 quadrantes)");
+    
+    while (!player.PlacementStatus())
+    {
+        Console.WriteLine($"Os navios são identificados por siglas:");
+        Console.WriteLine($"- PS - Porta-Aviões (5 quadrantes) - {player.ShipsPlaced("PS")}/{shipDistribution["PS"].quantity}");
+        Console.WriteLine($"- NT - Navio-Tanque (4 quadrantes) - {player.ShipsPlaced("NT")}/{shipDistribution["NT"].quantity}");
+        Console.WriteLine($"- DS - Destroyers (3 quadrantes)  - {player.ShipsPlaced("DS")}/{shipDistribution["DS"].quantity}");
+        Console.WriteLine($"- SB - Submarinos (2 quadrantes)  - {player.ShipsPlaced("SB")}/{shipDistribution["SB"].quantity}");
 
-    inputCoordinates(player);
-
+        gameboardPrinter(player);
+        inputCoordinates(player);
+        Console.Clear();
+    }
+    Console.WriteLine("Todos os navios foram posicionados");
+    gameboardPrinter(player);
+   
     return;
 }
 
-List<int> validateCoordinatesandShip(string ship, Player player)
+void gameboardPrinter(Player player)
+{
+    var gameboard = player.GetDefenseGameboard();
+
+    for (int i = 0; i < 11; i++)
+    {
+        for (int j = 0; j < 11; j++)
+        {
+            Console.Write($"{gameboard[i, j], -2} ");
+                        
+        }
+        Console.Write(Environment.NewLine);
+    }
+}
+
+void inputCoordinates(Player player)
+{
+
+    string ship = validateShip(player);
+    var placement = validateInputPlacement(ship, player);
+    dropShip(player, placement, ship);
+}
+
+void dropShip(Player player, List<int> placement, string ship)
+{
+    var gameboard = player.GetDefenseGameboard();
+    int firstLine = placement[0];
+    int firstColumn = placement[1];
+    int isVertical = placement[4];
+
+    if (isVertical == 1)
+    {
+        for (int i = 0; i < shipDistribution[ship].size; i++)
+        {
+            gameboard[firstLine + i, firstColumn] = ship;
+        }
+    }
+    else
+    {
+        for (int i = 0; i < shipDistribution[ship].size; i++)
+        {
+            gameboard[firstLine, firstColumn + i] = ship;
+        }
+    }
+    player.Drop(ship);
+
+}
+
+List<int> validateInputPlacement(string ship, Player player)
 {
     bool validInput = false;
     int shipSize = shipDistribution[ship].size;
@@ -159,7 +225,7 @@ List<int> validateCoordinatesandShip(string ship, Player player)
         }
         else
         {
-            var positionValidation = validPlace(stringValidation.coordinates, shipSize, player, placement);
+            var positionValidation = validPlaceGameboard(stringValidation.coordinates, shipSize, player, placement);
             if (!positionValidation.valid)
             {
                 Console.WriteLine("Posição inválida! Tente Novamente");
@@ -172,9 +238,9 @@ List<int> validateCoordinatesandShip(string ship, Player player)
         }
     } 
     return coordinates;
-
 }
-(bool valid, List<int> coordinates) validPlace(List<string> coordinates, int shipSize, Player player, string placement)
+
+(bool valid, List<int> coordinates) validPlaceGameboard(List<string> coordinates, int shipSize, Player player, string placement)
 {
     bool validPosition = false;
     string[,] gameboard = player.GetDefenseGameboard();
@@ -186,12 +252,14 @@ List<int> validateCoordinatesandShip(string ship, Player player)
     int lastColumn = int.Parse(coordinates[3]);
     int distColumns = lastColumn - firstColumn;
 
+    int isVertical = 0;
     List<int> indexShip = new List<int>()
     {
         firstLine,
         firstColumn,
         lastLine,
-        lastColumn
+        lastColumn,
+        isVertical
     };
 
     if (distLines < 0 || distColumns < 0)
@@ -226,6 +294,7 @@ List<int> validateCoordinatesandShip(string ship, Player player)
             else
             {
                 validPosition = true;
+                indexShip[4] = 1;
             }
         }        
     }
@@ -257,7 +326,7 @@ List<int> validateCoordinatesandShip(string ship, Player player)
             else if (lastPositionType == CharType.one && stringPosition[i] == '0')
             {
                 lastPositionType = CharType.number;
-                coordinates[i - 1] = "10";
+                coordinates[coordinates.Count - 1] = "10";
             }
             else
             {
@@ -294,7 +363,7 @@ string validateShip(Player player)
 {
     string ship = "";
     bool validShip = false;
-
+    Console.WriteLine("Qual tipo de embarcação deseja posicionar?");
     do
     {
         ship = Console.ReadLine().ToUpper();
@@ -323,7 +392,12 @@ string validateShip(Player player)
 void playerChanger(Player player)
 {
     Console.Clear();
-    Console.WriteLine($"Insira qualquer valor para iniciar a jogada de {player.GetName}");
+    if (player.GetPlayer() == 2)
+    {
+        Console.BackgroundColor = ConsoleColor.DarkGray;
+    }
+
+    Console.WriteLine($"Insira qualquer valor para iniciar a jogada de {player.GetName()}");
     Console.ReadLine();
     Console.Clear();
 }
@@ -335,9 +409,9 @@ public class Player
 
     String name;
     int player;
+    int perfectHits;
     string[,] attackGameboard;
     string[,] defenseGameboard;
-    String color;
     Dictionary<string, int> shipPlacement;
 
 
@@ -345,6 +419,7 @@ public class Player
     {
         this.name = name;
         this.player = player;
+        this.perfectHits = 0;
         this.attackGameboard = new string[11, 11];        
         this.defenseGameboard = new string[11, 11];
         this.shipPlacement = new Dictionary<string, int>
@@ -385,6 +460,11 @@ public class Player
         return name;
     }
 
+    public int GetPlayer()
+    {
+        return player;
+    }
+
     public string[,] GetAttackGameboard()
     {
         return attackGameboard;
@@ -395,24 +475,18 @@ public class Player
         return defenseGameboard;
     }
 
-    public int GetPlayerNumber()
-    {
-        return player;
-    }
-
     public bool PlacementStatus()
     {
         int shipsPlaced = shipPlacement.Sum(x => x.Value);
         return shipsPlaced == 10;
     }
 
-    public Dictionary<string, int> Place(string ship)
+    public Dictionary<string, int> Drop(string ship)
     {
         shipPlacement[ship] += 1;
 
         return shipPlacement;
     }
-
 
     public int ShipsPlaced(string ship)
     {
@@ -420,6 +494,13 @@ public class Player
 
         return shipQuantityPlaced;
     }
+
+    public void Hits(int perfectHits)
+    {
+        perfectHits++;
+    }
+
+
 }
 
 
