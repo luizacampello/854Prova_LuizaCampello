@@ -94,8 +94,8 @@ void gameModeTwo()
 {
     Player playerOne = new Player(inputPlayerName(1), 1);
     Player playerTwo = new Player(inputPlayerName(2), 2);
-
     gameboardFiller(playerOne);
+    Console.Clear();
     gameboardFiller(playerTwo);
 
 }
@@ -121,9 +121,8 @@ void inputCoordinates(Player player)
     Console.WriteLine("Qual o tipo de embarcação?");
     string ship = validateShip(player);
 
-    string placement = validateCoordinatesandShip(ship, player);
-    Console.WriteLine(placement);
-
+    var placement = validateCoordinatesandShip(ship, player);
+    Console.WriteLine($"Esse é o barco {ship} pra essa posição{placement} para {player.GetName()}");
 }
 
 void gameboardFiller(Player player)
@@ -141,10 +140,11 @@ void gameboardFiller(Player player)
     return;
 }
 
-string validateCoordinatesandShip(string ship, Player player)
+List<int> validateCoordinatesandShip(string ship, Player player)
 {
     bool validInput = false;
     int shipSize = shipDistribution[ship].size;
+    List<int> coordinates = new List<int>();
 
     Console.WriteLine("Qual a sua posição? (Exemplo: A1A2)");
     while (!validInput)
@@ -156,31 +156,30 @@ string validateCoordinatesandShip(string ship, Player player)
         if (!stringValidation.valid)
         {
             Console.WriteLine("Formato inválido! Tente Novamente (Exemplo: A1A2)");
-            // Thread.Sleep(2000);
-            //Console.Clear();
         }
         else
         {
-            validInput = validPlace(stringValidation.coordinates, shipSize, player);
-            if (!validInput)
+            var positionValidation = validPlace(stringValidation.coordinates, shipSize, player, placement);
+            if (!positionValidation.valid)
             {
                 Console.WriteLine("Posição inválida! Tente Novamente");
             }
+            else
+            {
+                validInput = true;
+                coordinates = positionValidation.coordinates;
+            }
         }
-
-
-    }
-
-    return placement;
+    } 
+    return coordinates;
 
 }
-(bool, List<int>) validPlace(List<string> coordinates, int shipSize, Player player)
+(bool valid, List<int> coordinates) validPlace(List<string> coordinates, int shipSize, Player player, string placement)
 {
     bool validPosition = false;
     string[,] gameboard = player.GetDefenseGameboard();
-    
-    int firstLine = Convert.ToInt32(Char.GetNumericValue(coordinates[0], 0)) - 64;
-    int lastLine = Convert.ToInt32(Char.GetNumericValue(coordinates[2], 0)) - 64;
+    int firstLine = (char.Parse(coordinates[0])) - 64;
+    int lastLine = (char.Parse(coordinates[2])) - 64;
     int distLines = lastLine - firstLine;
 
     int firstColumn = int.Parse(coordinates[1]);
@@ -200,7 +199,7 @@ string validateCoordinatesandShip(string ship, Player player)
         return (validPosition, indexShip);
     }
 
-    if (distLines == 0 && distColumns == shipSize)
+    if (distLines == 0 && distColumns + 1 == shipSize)
     {
         for (int i = 0; i < shipSize; i++)
         {
@@ -215,7 +214,7 @@ string validateCoordinatesandShip(string ship, Player player)
             }
         }       
     }
-    else if (distColumns == 0 && distLines == shipSize)
+    else if (distColumns == 0 && distLines + 1 == shipSize)
     {
         for (int i = 0; i < shipSize; i++)
         {
@@ -236,7 +235,7 @@ string validateCoordinatesandShip(string ship, Player player)
 
 (bool valid, List<string> coordinates) validStringFormat(string stringPosition)
 {
-    bool validString = false;
+    bool validString = true;
     CharType lastPositionType = CharType.number;
     List<string> coordinates = new List<string>();
     int stringLength = stringPosition.Length;
@@ -253,7 +252,7 @@ string validateCoordinatesandShip(string ship, Player player)
             if (stringPosition[i] >= 'A' && stringPosition[i] <= 'J')
             {
                 lastPositionType = CharType.letter;
-                coordinates.Append(stringPosition[i].ToString());
+                coordinates.Add(stringPosition[i].ToString());
             }
             else if (lastPositionType == CharType.one && stringPosition[i] == '0')
             {
@@ -273,12 +272,12 @@ string validateCoordinatesandShip(string ship, Player player)
                 if (stringPosition[i] == '1')
                 {
                     lastPositionType = CharType.one;
-                    coordinates.Append(stringPosition[i].ToString());
+                    coordinates.Add(stringPosition[i].ToString());
                 }
                 else
                 {
                     lastPositionType = CharType.number;
-                    coordinates.Append(stringPosition[i].ToString());
+                    coordinates.Add(stringPosition[i].ToString());
                 }
             }
             else
@@ -321,7 +320,13 @@ string validateShip(Player player)
     return ship;
 }
 
-
+void playerChanger(Player player)
+{
+    Console.Clear();
+    Console.WriteLine($"Insira qualquer valor para iniciar a jogada de {player.GetName}");
+    Console.ReadLine();
+    Console.Clear();
+}
 
 
 
@@ -390,15 +395,15 @@ public class Player
         return defenseGameboard;
     }
 
-    public String GetColor()
+    public int GetPlayerNumber()
     {
-        return color;
+        return player;
     }
 
-    public int GetPlacementStatus()
+    public bool PlacementStatus()
     {
         int shipsPlaced = shipPlacement.Sum(x => x.Value);
-        return shipsPlaced;
+        return shipsPlaced == 10;
     }
 
     public Dictionary<string, int> Place(string ship)
