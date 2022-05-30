@@ -74,10 +74,7 @@ int inputGameMode()
 void gameModeOne()
 {
     Console.WriteLine("Disponivel somente na versão Pro");
-    Console.WriteLine("Adquira já mandando um PIX para lumcampello@gmail.com");
-    //Player playerOne = new Player(inputPlayerName(1), 1);
-    //gameboardFiller(playerOne);
-
+    return;
 }
 
 void gameModeTwo()
@@ -86,7 +83,7 @@ void gameModeTwo()
     Player playerTwo = new Player(inputPlayerName(2), 2);
 
     Console.WriteLine("Vamos Jogar?");
-    Console.WriteLine("Digite qualquer valor para iniciar o jogo");
+    Console.WriteLine("Pressione qualquer tecla para iniciar o jogo");
     Console.ReadKey();
     Console.Clear();
     
@@ -132,10 +129,10 @@ void headerGameboard(Player player, Player enemy)
     var defenseGameboard = player.GetDefenseGameboard();
     var attackGameboard = player.GetAttackGameboard();
     var currentColor = Console.BackgroundColor;
-    Console.WriteLine("------------------------------------------------------------------");
+    Console.WriteLine("------------------------------------------------------------------------");
     Console.WriteLine($"Placar: {player.GetName()} {player.PerfectHits()}/30 VS {enemy.GetName()} {enemy.PerfectHits()}/30");
     Console.WriteLine();
-    Console.WriteLine("          Meu tabuleiro                        Tabuleiro de ataque");
+    Console.WriteLine("         Meu tabuleiro                         Tabuleiro de ataque");
     for (int i = 0; i < 11; i++)
     {
         for (int j = 0; j < 11; j++)
@@ -177,19 +174,19 @@ void turn(Player actual, Player next)
 
     while (!validTarget)
     {
-        Console.WriteLine("Vamos derrubar alguns navios. Onde deseja atirar? Exemplo(B10)");
+        Console.WriteLine("Vamos derrubar alguns navios. Onde deseja atirar? (Exemplo: B10)");
         string input = Console.ReadLine().ToUpper();
 
         if (string.IsNullOrWhiteSpace(input))
         {
-            Console.WriteLine("Alvo inválido.Tente Novamente");
+            Console.WriteLine("Alvo inválido, tente Novamente.");
             continue;
         }
 
         int stringSize = input.Length;
         if (stringSize < 2 || stringSize > 3)
         {
-            Console.WriteLine("Alvo inválido.Tente Novamente");
+            Console.WriteLine("Alvo inválido, tente Novamente.");
             continue;
         }
 
@@ -208,7 +205,7 @@ void turn(Player actual, Player next)
                 }
             }
         }
-        Console.WriteLine("Alvo inválido.Tente Novamente");
+        Console.WriteLine("Alvo inválido, tente Novamente.");
     }
 
     return (lineIndex, columnIndex);
@@ -269,7 +266,7 @@ string inputPlayerName(int player)
         for (int i = 0; i < 3; i++)
         {
             Console.Write(".");
-            Thread.Sleep(500);
+            Thread.Sleep(200);
         }
         Console.WriteLine();
         Console.WriteLine($"Vou te chamar de Player {player}!");
@@ -294,17 +291,18 @@ void gameboardFiller(Player player)
         Console.WriteLine($"- SB - Submarinos (2 quadrantes)  - {player.ShipsPlaced("SB")}/{shipDistribution["SB"].quantity}");
         Console.WriteLine();
 
-        gameboardPrinter(player);
-        inputCoordinates(player);
+        positionalGameboardPrinter(player);
+        inputShipCoordinates(player);
         Console.Clear();
     }
-    Console.WriteLine("Todos os navios foram posicionados");
-    gameboardPrinter(player);
+    Console.WriteLine("Todos os navios foram posicionados!");
+    Console.WriteLine();
+    positionalGameboardPrinter(player);
    
     return;
 }
 
-void gameboardPrinter(Player player)
+void positionalGameboardPrinter(Player player)
 {
     var gameboard = player.GetDefenseGameboard();
 
@@ -317,14 +315,15 @@ void gameboardPrinter(Player player)
         }
         Console.Write(Environment.NewLine);
     }
+    Console.WriteLine();
 }
 
-void inputCoordinates(Player player)
+void inputShipCoordinates(Player player)
 {
 
-    string ship = validateShip(player);
-    var placement = validateInputPlacement(ship, player);
-    dropShip(player, placement, ship);
+    string ship = validateInputShip(player);
+    var coordinates = validateInputCoordinates(ship, player);
+    dropShip(player, coordinates, ship);
 }
 
 void dropShip(Player player, List<int> placement, string ship)
@@ -352,7 +351,7 @@ void dropShip(Player player, List<int> placement, string ship)
 
 }
 
-List<int> validateInputPlacement(string ship, Player player)
+List<int> validateInputCoordinates(string ship, Player player)
 {
     bool validInput = false;
     int shipSize = shipDistribution[ship].size;
@@ -371,7 +370,7 @@ List<int> validateInputPlacement(string ship, Player player)
         }
         else
         {
-            var positionValidation = validPlaceGameboard(stringValidation.coordinates, shipSize, player, placement);
+            var positionValidation = validPlaceGameboard(stringValidation.coordinates, shipSize, player);
             if (!positionValidation.valid)
             {
                 Console.WriteLine("Posição inválida! Tente Novamente");
@@ -386,7 +385,7 @@ List<int> validateInputPlacement(string ship, Player player)
     return coordinates;
 }
 
-(bool valid, List<int> coordinates) validPlaceGameboard(List<string> coordinates, int shipSize, Player player, string placement)
+(bool valid, List<int> coordinates) validPlaceGameboard(List<string> coordinates, int shipSize, Player player)
 {
     bool validPosition = false;
     string[,] gameboard = player.GetDefenseGameboard();
@@ -505,7 +504,7 @@ List<int> validateInputPlacement(string ship, Player player)
     return (validString, coordinates);
 }
 
-string validateShip(Player player)
+string validateInputShip(Player player)
 {
     string ship = "";
     bool validShip = false;
@@ -537,20 +536,10 @@ string validateShip(Player player)
 
 void playerChanger(Player player, Player next)
 {
-    Console.WriteLine($"Digite qualquer tecla para encerrar a jogada de {player.GetName()}");
+    Console.WriteLine();
+    Console.WriteLine($"Pressione qualquer tecla para encerrar a jogada de {player.GetName()}");
     Console.ReadKey();
     Console.Clear();
-
-    if (next.GetName() == "PC da Luiza")
-    {
-        Console.BackgroundColor = ConsoleColor.DarkGray;
-        Console.Write("Processando jogada");
-        for (int i = 0; i < 3; i++)
-        {
-            Console.Write(".");
-            Thread.Sleep(500);
-        }
-    }
 
     if (next.GetPlayer() == 2)
     {
@@ -560,7 +549,7 @@ void playerChanger(Player player, Player next)
     {
         Console.ResetColor();
     }
-    Console.WriteLine($"Insira qualquer valor para iniciar a jogada de {next.GetName()}");
+    Console.WriteLine($"Pressione qualquer tecla para iniciar a jogada de {next.GetName()}");
     Console.ReadKey();
     Console.Clear();
 }
