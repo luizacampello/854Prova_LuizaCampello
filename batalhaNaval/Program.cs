@@ -7,6 +7,15 @@ Dictionary<string, (string name, int quantity, int size)> shipDistribution = new
     { "SB", ("Submarinos", 4, 2) }
 };
 
+Dictionary<string, string> shotMessages = new()
+{
+    { "Miss1", "Splash! Você acertou a água!" },
+    { "Miss2", "Não tem nada aqui" },
+    { "Miss3", "Não foi dessa vez" },
+    { "Hit1", "BOOM! Tiro certeiro!" },
+    { "Hit2", "Acertou!" },
+    { "Hit3", "Bom tiro!" }
+};
 
 beginGame();
 
@@ -82,23 +91,121 @@ void gameModeTwo()
     Console.WriteLine("Digite qualquer valor para iniciar o jogo");
     Console.ReadLine();
     Console.Clear();
-
-    playerChanger(playerOne);
+    
     gameboardFiller(playerOne);
-
-    playerChanger(playerTwo);
+    playerChanger(playerOne, playerTwo);    
     gameboardFiller(playerTwo);
 
-    Player winner = joguinho(playerOne, playerTwo);
+    Player actual = playerTwo;
+    Player next = playerOne;
+    bool isWinner = false;
+
+    while (!isWinner)
+    {
+        (actual, next) = (next, actual);
+        playerChanger(actual, next);
+        headerGameboard(actual);
+        jogada(actual, next);
+        isWinner = actual.IsWinner();        
+    }
+
     PlayAgain();
 }
 
-Player joguinho(Player one, Player two)
+void headerGameboard(Player player)
 {
-    // tá acabando
-    // vai dar certo s2
-    return one;
+    var defenseGameboard = player.GetDefenseGameboard();
+    var attackGameboard = player.GetAttackGameboard();
+    Console.WriteLine("Meu tabuleiro                                     Tabuleiro de ataque");
+    for (int i = 0; i < 11; i++)
+    {
+        for (int j = 0; j < 11; j++)
+        {
+            Console.Write($"{defenseGameboard[i, j],-2} ");
+        }
+        Console.Write("      ");
+        for (int j = 0; j < 11; j++)
+        {
+            Console.Write($"{attackGameboard[i, j],-2} ");
+        }
+        Console.Write(Environment.NewLine);
+    }
+    Console.WriteLine($"{player.PerfectHits()}/30");
 }
+
+void jogada(Player actual, Player next)
+{
+    string[,] attackGameboard = actual.GetAttackGameboard();
+    string[,] enemyGameboard = next.GetDefenseGameboard();
+    var target = acquiredTarget(attackGameboard);
+    shotTarget(target.line, target.column, enemyGameboard, attackGameboard, actual);
+
+}
+
+(int line, int column) acquiredTarget(string[,] gameboard)
+{
+    Console.WriteLine("Vamos derrubar alguns navios. Onde deseja atirar? Exemplo(B10)");
+    string input = Console.ReadLine();
+
+    if (string.IsNullOrWhiteSpace(input))
+    {
+        Console.WriteLine("Alvo inválido.Tente Novamente");
+        acquiredTarget(gameboard);
+    }
+
+    int stringSize = input.Length;
+    if (stringSize < 2 || stringSize > 3)
+    {
+        Console.WriteLine("Alvo inválido.Tente Novamente");
+        acquiredTarget(gameboard);
+    }
+    
+    if (input[0] >= 'A' && input[0] <= 'J')
+    {        
+        int columnIndex;
+        if(int.TryParse(input.Substring(1), out columnIndex))
+        {
+            if (columnIndex >= 1 || columnIndex <= 10)
+            {
+                int lineIndex = (input[0]) - 64;
+                if (gameboard[lineIndex,columnIndex] == "")
+                {
+                    return (lineIndex, columnIndex);
+                }
+                else
+                {
+                    Console.WriteLine("Você já atacou esse alvo.Tente outra posição");
+                    acquiredTarget(gameboard);
+                }
+            }            
+        }
+    }    
+    Console.WriteLine("Alvo inválido.Tente Novamente");
+    acquiredTarget(gameboard);
+    return (0, 0);
+}
+
+void shotTarget(int targetLine, int targetColumn, string[,] enemyGameboard, string[,] attackGameboard, Player player) 
+{
+    Random rnd = new Random();
+    int random = rnd.Next(1, 3);
+    if (enemyGameboard[targetLine, targetColumn] == "")
+    {
+        attackGameboard[targetLine, targetColumn] = "A";
+        enemyGameboard[targetLine, targetColumn] = "~";
+        string message = $"Miss{random}";
+        Console.WriteLine(shotMessages[message]);
+    }
+    else
+    {
+        attackGameboard[targetLine, targetColumn] = "X";
+        enemyGameboard[targetLine, targetColumn] = "X";
+        player.Hits();
+        string message = $"Hit{random}";
+        Console.WriteLine(shotMessages[message]);
+        
+    }
+} 
 
 void PlayAgain()
 {
@@ -389,15 +496,21 @@ string validateShip(Player player)
     return ship;
 }
 
-void playerChanger(Player player)
+void playerChanger(Player player, Player next)
 {
+    Console.WriteLine($"Digite qualquer tecla para encerrar a jogada de {player.GetName()}");
+    Console.ReadLine();
     Console.Clear();
-    if (player.GetPlayer() == 2)
+    if (next.GetPlayer() == 2)
     {
-        Console.BackgroundColor = ConsoleColor.DarkGray;
+        Console.BackgroundColor = ConsoleColor.DarkBlue;
+    }
+    else
+    {
+        Console.ResetColor();
     }
 
-    Console.WriteLine($"Insira qualquer valor para iniciar a jogada de {player.GetName()}");
+    Console.WriteLine($"Insira qualquer valor para iniciar a jogada de {next.GetName()}");
     Console.ReadLine();
     Console.Clear();
 }
@@ -495,12 +608,20 @@ public class Player
         return shipQuantityPlaced;
     }
 
-    public void Hits(int perfectHits)
+    public void Hits()
     {
         perfectHits++;
     }
 
+    public bool IsWinner()
+    {
+        return perfectHits == 30;
+    }
 
+    public int PerfectHits()
+    {
+        return perfectHits;
+    }
 }
 
 
