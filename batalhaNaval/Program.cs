@@ -239,11 +239,12 @@ void shotTarget(int targetLine, int targetColumn, string[,] enemyGameboard, stri
 
 void PlayAgain()
 {
-    Console.Write("Gostaria de jogar novamente? S/N");
-    string input = Console.ReadLine();
+    Console.Write("Gostaria de jogar novamente? S/N ");
+    string input = Console.ReadLine().ToUpper().Trim();
     switch (input)
     {
         case "S":
+            Console.Clear();
             beginGame();
             return;
         case "N":
@@ -559,7 +560,7 @@ public class Player
 
     String name;
     int player;
-    int perfectHits;
+    int perfectHits = 0;
     string[,] attackGameboard;
     string[,] defenseGameboard;
     Dictionary<string, int> shipPlacement;
@@ -570,10 +571,9 @@ public class Player
     {
         this.name = name;
         this.player = player;
-        this.perfectHits = 0;
-        this.attackGameboard = new string[11, 11];        
-        this.defenseGameboard = new string[11, 11];
-        this.shipPlacement = new Dictionary<string, int>
+        attackGameboard = new string[11, 11];        
+        defenseGameboard = new string[11, 11];
+        shipPlacement = new Dictionary<string, int>
         {
             { "PS", 0 },
             { "NT", 0 },
