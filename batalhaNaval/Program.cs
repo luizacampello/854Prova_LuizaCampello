@@ -66,7 +66,7 @@ void gameModeSelection()
 int inputGameMode()
 {
     Console.Write("Insira o modo de jogo: ");
-    string userInput = Console.ReadLine();
+    string userInput = Console.ReadLine().Trim();
     int.TryParse(userInput, out int intMode);
     return intMode;
 }
@@ -86,9 +86,9 @@ void gameModeTwo()
     Console.WriteLine("Pressione qualquer tecla para iniciar o jogo");
     Console.ReadKey();
     Console.Clear();
-    
+
     gameboardFiller(playerOne);
-    playerChanger(playerOne, playerTwo);    
+    playerChanger(playerOne, playerTwo);
     gameboardFiller(playerTwo);
 
     Player actual = playerTwo;
@@ -98,10 +98,10 @@ void gameModeTwo()
     while (!isWinner)
     {
         playerChanger(actual, next);
-        (actual, next) = (next, actual);        
+        (actual, next) = (next, actual);
         headerGameboard(actual, next);
         turn(actual, next);
-        isWinner = actual.IsWinner();        
+        isWinner = actual.IsWinner();
     }
 
     winScreen(actual);
@@ -111,7 +111,7 @@ void gameModeTwo()
 void winScreen(Player player)
 {
     Console.Clear();
-    Console.WriteLine("*********************************************************");
+    Console.WriteLine("**********************************************************");
     Console.WriteLine($"Parabéns {player.GetName()}, você venceu!!!!");
     Console.WriteLine($"Foram {player.TurnsPlayed()} turnos jogados!");
     Console.WriteLine("**********************************************************");
@@ -119,7 +119,7 @@ void winScreen(Player player)
     Console.WriteLine();
     Console.WriteLine("Let's Code - Projeto Módulo 01");
     Console.WriteLine("Professor Heber Henrique da Silva");
-    Console.WriteLine("Created by Luiza Motta Campello");    
+    Console.WriteLine("Created by Luiza Motta Campello");
     Console.WriteLine();
     Console.WriteLine();
 }
@@ -153,7 +153,7 @@ void headerGameboard(Player player, Player enemy)
         Console.Write(Environment.NewLine);
     }
     Console.WriteLine();
-    
+
 }
 
 void turn(Player actual, Player next)
@@ -175,18 +175,18 @@ void turn(Player actual, Player next)
     while (!validTarget)
     {
         Console.WriteLine("Vamos derrubar alguns navios. Onde deseja atirar? (Exemplo: B10)");
-        string input = Console.ReadLine().ToUpper();
+        string input = inputToText();
 
         if (string.IsNullOrWhiteSpace(input))
         {
-            Console.WriteLine("Alvo inválido, tente Novamente.");
+            Console.WriteLine("Alvo inválido, tente novamente.");
             continue;
         }
 
         int stringSize = input.Length;
         if (stringSize < 2 || stringSize > 3)
         {
-            Console.WriteLine("Alvo inválido, tente Novamente.");
+            Console.WriteLine("Alvo inválido, tente novamente.");
             continue;
         }
 
@@ -196,22 +196,22 @@ void turn(Player actual, Player next)
             {
                 if (columnIndex >= 1 && columnIndex <= 10)
                 {
-                   lineIndex = (input[0]) - 64;
+                    lineIndex = (input[0]) - 64;
                     if (gameboard[lineIndex, columnIndex] == "")
                     {
                         validTarget = true;
                         break;
-                    }                    
+                    }
                 }
             }
         }
-        Console.WriteLine("Alvo inválido, tente Novamente.");
+        Console.WriteLine("Alvo inválido, tente novamente.");
     }
 
     return (lineIndex, columnIndex);
 }
 
-void shotTarget(int targetLine, int targetColumn, string[,] enemyGameboard, string[,] attackGameboard, Player player, Player enemy) 
+void shotTarget(int targetLine, int targetColumn, string[,] enemyGameboard, string[,] attackGameboard, Player player, Player enemy)
 {
     Random rnd = new Random();
     int random = rnd.Next(1, 3);
@@ -233,14 +233,14 @@ void shotTarget(int targetLine, int targetColumn, string[,] enemyGameboard, stri
         Console.Clear();
         headerGameboard(player, enemy);
         Console.WriteLine(shotMessages[message]);
-        
+
     }
-} 
+}
 
 void PlayAgain()
 {
     Console.Write("Gostaria de jogar novamente? S/N ");
-    string input = Console.ReadLine().ToUpper().Trim();
+    string input = inputToText();
     switch (input)
     {
         case "S":
@@ -260,7 +260,7 @@ void PlayAgain()
 string inputPlayerName(int player)
 {
     Console.Write($"Olá Jogador {player}, qual o seu nome? ");
-    string playerName = Console.ReadLine();
+    string playerName = Console.ReadLine().Trim();
 
     if (String.IsNullOrWhiteSpace(playerName))
     {
@@ -282,7 +282,7 @@ void gameboardFiller(Player player)
 {
     Console.WriteLine($"{player.GetName()}, hora de posicionar os navios!");
     Console.WriteLine();
-    
+
     while (!player.PlacementStatus())
     {
         Console.WriteLine($"Os navios são identificados por siglas:");
@@ -299,7 +299,7 @@ void gameboardFiller(Player player)
     Console.WriteLine("Todos os navios foram posicionados!");
     Console.WriteLine();
     positionalGameboardPrinter(player);
-   
+
     return;
 }
 
@@ -311,8 +311,7 @@ void positionalGameboardPrinter(Player player)
     {
         for (int j = 0; j < 11; j++)
         {
-            Console.Write($"{gameboard[i, j], -2} ");
-                        
+            Console.Write($"{gameboard[i, j],-2} ");
         }
         Console.Write(Environment.NewLine);
     }
@@ -321,7 +320,6 @@ void positionalGameboardPrinter(Player player)
 
 void inputShipCoordinates(Player player)
 {
-
     string ship = validateInputShip(player);
     var coordinates = validateInputCoordinates(ship, player);
     dropShip(player, coordinates, ship);
@@ -349,7 +347,6 @@ void dropShip(Player player, List<int> placement, string ship)
         }
     }
     player.Drop(ship);
-
 }
 
 List<int> validateInputCoordinates(string ship, Player player)
@@ -361,9 +358,9 @@ List<int> validateInputCoordinates(string ship, Player player)
     Console.WriteLine("Qual a sua posição? (Exemplo: A1A2)");
     while (!validInput)
     {
-        string placement = Console.ReadLine().ToUpper();
+        string placement = inputToText();
 
-        var stringValidation = validStringFormat(placement);        
+        var stringValidation = validStringFormat(placement);
 
         if (!stringValidation.valid)
         {
@@ -382,7 +379,7 @@ List<int> validateInputCoordinates(string ship, Player player)
                 coordinates = positionValidation.coordinates;
             }
         }
-    } 
+    }
     return coordinates;
 }
 
@@ -417,7 +414,7 @@ List<int> validateInputCoordinates(string ship, Player player)
     {
         for (int i = 0; i < shipSize; i++)
         {
-            if(gameboard[firstLine, firstColumn + i] != "")
+            if (gameboard[firstLine, firstColumn + i] != "")
             {
                 validPosition = false;
                 break;
@@ -426,7 +423,7 @@ List<int> validateInputCoordinates(string ship, Player player)
             {
                 validPosition = true;
             }
-        }       
+        }
     }
     else if (distColumns == 0 && distLines + 1 == shipSize)
     {
@@ -442,7 +439,7 @@ List<int> validateInputCoordinates(string ship, Player player)
                 validPosition = true;
                 indexShip[4] = 1;
             }
-        }        
+        }
     }
 
     return (validPosition, indexShip);
@@ -507,12 +504,12 @@ List<int> validateInputCoordinates(string ship, Player player)
 
 string validateInputShip(Player player)
 {
-    string ship = "";
+    string ship;
     bool validShip = false;
     Console.WriteLine("Qual tipo de embarcação deseja posicionar?");
     do
     {
-        ship = Console.ReadLine().ToUpper();
+        ship = inputToText();
         if (shipDistribution.ContainsKey(ship))
         {
             int shipQuantity = shipDistribution[ship].quantity;
@@ -555,34 +552,34 @@ void playerChanger(Player player, Player next)
     Console.Clear();
 }
 
+string inputToText()
+{
+    string textInput = Console.ReadLine().ToUpper().Trim();
+    return textInput;
+}
+
 public class Player
 {
-
     String name;
     int player;
+    int turns = 0;
     int perfectHits = 0;
-    string[,] attackGameboard;
-    string[,] defenseGameboard;
-    Dictionary<string, int> shipPlacement;
-    int turns;
-
-
+    string[,] attackGameboard = new string[11, 11];
+    string[,] defenseGameboard = new string[11, 11];
+    Dictionary<string, int> shipPlacement = new()
+    {
+        { "PS", 0 },
+        { "NT", 0 },
+        { "DS", 0 },
+        { "SB", 0 }
+    };
+    
     public Player(String name, int player)
     {
         this.name = name;
         this.player = player;
-        attackGameboard = new string[11, 11];        
-        defenseGameboard = new string[11, 11];
-        shipPlacement = new Dictionary<string, int>
-        {
-            { "PS", 0 },
-            { "NT", 0 },
-            { "DS", 0 },
-            { "SB", 0 }
-        };
         initGameboard(attackGameboard);
         initGameboard(defenseGameboard);
-
     }
 
     private void initGameboard(string[,] gameboard)
@@ -591,7 +588,6 @@ public class Player
         {
             gameboard[0, i] = i.ToString();
         }
-
 
         for (int i = 1; i < 11; i++)
         {
@@ -616,14 +612,14 @@ public class Player
         return player;
     }
 
-    public string[,] GetAttackGameboard()
-    {
-        return attackGameboard;
-    }
-
     public string[,] GetDefenseGameboard()
     {
         return defenseGameboard;
+    }
+
+    public string[,] GetAttackGameboard()
+    {
+        return attackGameboard;
     }
 
     public bool PlacementStatus()
@@ -632,17 +628,14 @@ public class Player
         return shipsPlaced == 10;
     }
 
-    public Dictionary<string, int> Drop(string ship)
+    public void Drop(string ship)
     {
         shipPlacement[ship] += 1;
-
-        return shipPlacement;
     }
 
     public int ShipsPlaced(string ship)
     {
         int shipQuantityPlaced = shipPlacement[ship];
-
         return shipQuantityPlaced;
     }
 
